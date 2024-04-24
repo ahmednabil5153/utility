@@ -152,7 +152,7 @@ For reference documentation of the protocol, please refer to
 <p>Don't worry if this doesn't yet make a lot of sense: hopefully, by the end of
 this document the above picture would become much clearer!</p>
 <h2 id="overall-operation"><a class="header" href="#overall-operation">Overall Operation</a></h2>
-<p><code>framework</code> is a blockchain node -- it's a single binary (<code>uncd</code>) which runs on
+<p><code>framework</code> is a blockchain node -- it's a single binary (<code>unc-node</code>) which runs on
 some machine and talks to other similar binaries running elsewhere. Together,
 the nodes agree (using a distributed consensus algorithm) on a particular
 sequence of transactions. Once transaction sequence is established, each node
@@ -160,7 +160,7 @@ applies transactions to the current state. Because transactions are fully
 deterministic, each node in the network ends up with identical state. To allow
 greater scalability, UNC protocol uses sharding, which allows a node to hold
 only a small subset (shard) of the whole state.</p>
-<p><code>uncd</code> is a stateful, restartable process. When <code>uncd</code> starts, the node
+<p><code>unc-node</code> is a stateful, restartable process. When <code>unc-node</code> starts, the node
 connects to the network and starts processing blocks (block is a batch of
 transactions, processed together; transactions are batched into blocks for
 greater efficiency). The results of processing are persisted in the database.
@@ -172,7 +172,7 @@ missing bits of history from more up-to-date peer nodes.</p>
 <p>Major components of framework:</p>
 <ul>
 <li>
-<p><strong>JSON RPC</strong>. This HTTP RPC interface is how <code>uncd</code> communicates with
+<p><strong>JSON RPC</strong>. This HTTP RPC interface is how <code>unc-node</code> communicates with
 non-blockchain outside world. For example, to submit a transaction, some
 client sends an RPC request with it to some node in the network. From that
 node, the transaction propagates through the network, until it is included in
@@ -182,7 +182,7 @@ about current state of the blockchain. The <strong>JSON RPC</strong> interface i
 </li>
 <li>
 <p><strong>Network</strong>. If RPC is aimed &quot;outside&quot; the blockchain, &quot;network&quot; is how peer
-<code>uncd</code> nodes communicate with each other within the blockchain. RPC carries
+<code>unc-node</code> nodes communicate with each other within the blockchain. RPC carries
 requests from users of the blockchain, while network carries various messages
 needed to implement consensus. Two directly connected nodes communicate by
 sending protobuf-encoded messages over TCP. A node also includes logic to
@@ -238,7 +238,7 @@ various operations.</p>
 </li>
 </ul>
 <h2 id="entry-points"><a class="header" href="#entry-points">Entry Points</a></h2>
-<p><code>uncd/src/main.rs</code> contains the main function that starts a blockchain node.
+<p><code>unc-node/src/main.rs</code> contains the main function that starts a blockchain node.
 However, this file mostly only contains the logic to parse arguments and
 dispatch different commands. <code>start_with_config</code> in <code>framework/src/lib.rs</code> is the
 actual entry point and it starts all the actors.</p>
@@ -345,8 +345,8 @@ through compile-time feature flags. Currently we use wasmer0 and wasmer2 in
 production. The <code>imports</code> module exposes host functions defined in
 <code>unc-vm-logic</code> to WASM code. In other words, it defines the ABI of the
 contracts on UNC.</p>
-<h3 id="uncd"><a class="header" href="#uncd"><code>uncd</code></a></h3>
-<p>As mentioned before, <code>uncd</code> is the crate that contains that main entry points.
+<h3 id="unc-node"><a class="header" href="#unc-node"><code>unc-node</code></a></h3>
+<p>As mentioned before, <code>unc-node</code> is the crate that contains that main entry points.
 All the actors are spawned in <code>start_with_config</code>. It is also worth noting that
 <code>NightshadeRuntime</code> is the struct that implements <code>RuntimeAdapter</code>.</p>
 <!-- TODO: Maybe add RuntimeAdapter mention or explanation in runtime/runtime chapter? -->

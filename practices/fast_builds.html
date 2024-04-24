@@ -175,14 +175,14 @@ rustflags = [&quot;-C&quot;, &quot;link-arg=-fuse-ld=lld&quot;]
 <p><code>lld</code> itself can be installed with <code>sudo apt install lld</code> (or the equivalent in 
 the distro/package manager of your choice).</p>
 <h2 id="prebuilt-rocksdb"><a class="header" href="#prebuilt-rocksdb">Prebuilt RocksDB</a></h2>
-<p>By default, we compile RocksDB (a C++ project) from source during the uncd
+<p>By default, we compile RocksDB (a C++ project) from source during the unc-node
 build. By linking to a prebuilt copy of RocksDB this work can be avoided
 entirely. This is a huge win, especially if you clean the <code>./target</code> directory
 frequently.</p>
 <p>To use a prebuilt RocksDB, set the <code>ROCKSDB_LIB_DIR</code> environment variable to
 a location containing <code>librocksdb.a</code>:</p>
 <pre><code class="language-console">$ export ROCKSDB_LIB_DIR=/usr/lib/x86_64-linux-gnu
-$ cargo build -p uncd
+$ cargo build -p unc-node
 </code></pre>
 <p>Note, that the system must provide a recent version of the library which,
 depending on which operating system you’re using, may require installing packages
@@ -208,7 +208,7 @@ the global cache whenever possible. This tool can be set up as such:</p>
 <pre><code class="language-console">$ cargo install sccache
 $ export RUSTC_WRAPPER=&quot;sccache&quot;
 $ export SCCACHE_CACHE_SIZE=&quot;30G&quot;
-$ cargo build -p uncd
+$ cargo build -p unc-node
 </code></pre>
 <p>Refer to the <a href="https://github.com/mozilla/sccache">project’s README</a> for further
 configuration options.</p>

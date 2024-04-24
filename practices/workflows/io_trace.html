@@ -151,26 +151,26 @@ observe those.</p>
 features (prefetcher, flat state) and to find out why specific contracts produce
 slow receipts.</p>
 <h2 id="setup"><a class="header" href="#setup">Setup</a></h2>
-<p>When compiling uncd (or the paramater estimator) with <code>feature=io_trace</code> it
+<p>When compiling unc-node (or the paramater estimator) with <code>feature=io_trace</code> it
 instruments the binary code with fine-grained database operations tracking.</p>
 <p><em>Aside: We don't enable it by default because we are afraid the overhead could be
 too much, since we store some information for very hot paths such as trie node
 cache hits. Although we haven't properly evaluated if it really is a performance
 problem.</em></p>
 <p>This allows using the <code>--record-io-trace=/path/to/output.io_trace</code> CLI flag on
-uncd. Run it in combination with the subcommands <code>uncd run</code>, <code>uncd view-state</code>, or <code>runtime-params-estimator</code> and it will record an IO trace. Make
-sure to provide the flag to <code>uncd</code> itself, however, not to the subcommands.
+unc-node. Run it in combination with the subcommands <code>unc-node run</code>, <code>unc-node view-state</code>, or <code>runtime-params-estimator</code> and it will record an IO trace. Make
+sure to provide the flag to <code>unc-node</code> itself, however, not to the subcommands.
 (See examples below)</p>
 <pre><code class="language-bash"># Example command for normal node
 # (Careful! This will quickly fill your disk if you let it run.)
-cargo build --release -p uncd --features=io_trace
-target/release/uncd \
+cargo build --release -p unc-node --features=io_trace
+target/release/unc-node \
     --record-io-trace=/mnt/disks/some_disk_with_enough_space/my.io_trace \
     run
 </code></pre>
 <pre><code class="language-bash"># Example command for state viewer, applying a range of chunks in shard 0
-cargo build --release -p uncd --features=io_trace
-target/release/uncd \
+cargo build --release -p unc-node --features=io_trace
+target/release/unc-node \
     --record-io-trace=75220100-75220101.s0.io_trace \
     view-state apply-range --start-index 75220100 --end-index 75220101 \
     --sequential --shard-id 0

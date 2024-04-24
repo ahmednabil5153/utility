@@ -147,8 +147,8 @@ contract on our local node.</p>
 <p>Let's start with creating a fresh local network with an account to which we'll
 deploy a contract. You might want to re-read <a href="./run_a_node.html">how to run a node</a>
 to understand what's going one here:</p>
-<pre><code class="language-console">$ cargo run --profile dev-release -p uncd -- init
-$ cargo run --profile dev-release -p uncd -- run
+<pre><code class="language-console">$ cargo run --profile dev-release -p unc-node -- init
+$ cargo run --profile dev-release -p unc-node -- run
 $ UNC_ENV=local unc create-account alice.test.unc --masterAccount test.unc
 </code></pre>
 <p>As a sanity check, querying the state of <code>alice.test.unc</code> account should work:</p>

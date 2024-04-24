@@ -277,13 +277,13 @@ the hash of the receipt.</p>
 </code></pre>
 <p>Remember that the outcomes of the execution will be added to the NEXT block, so
 let’s find the next block hash, and the proper chunk.</p>
-<p>(in this example, I’ve used the <code>view-state chain</code> from uncd)</p>
+<p>(in this example, I’ve used the <code>view-state chain</code> from unc-node)</p>
 <pre><code>417 7FtuLHR3VSNhVTDJ8HmrzTffFWoWPAxBusipYa2UfrND |      node0 | parent: 416 C9WnNCbNvkQvnS7jdpaSGrqGvgM7Wwk5nQvkNC9aZFBH | .... 0: E6pfD84bvHmEWgEAaA8USCn2X3XUJAbFfKLmYez8TgZ8 107 Tgas |1: Ch1zr9TECSjDVaCjupNogLcNfnt6fidtevvKGCx8c9aC 104 Tgas |2: 87CmpU6y7soLJGTVHNo4XDHyUdy5aj9Qqy4V7muF5LyF   0 Tgas |3: CtaPWEvtbV4pWem9Kr7Ex3gFMtPcKL4sxDdXD4Pc7wah   0 Tgas
 418 J9WQV9iRJHG1shNwGaZYLEGwCEdTtCEEDUTHjboTLLmf |      node0 | parent: 417 7FtuLHR3VSNhVTDJ8HmrzTffFWoWPAxBusipYa2UfrND | .... 0: 7APjALaoxc8ymqwHiozB5BS6mb3LjTgv4ofRkKx2hMZZ   0 Tgas |1: BoVf3mzDLLSvfvsZ2apPSAKjmqNEHz4MtPkmz9ajSUT6   0 Tgas |2: Auz4FzUCVgnM7RsQ2noXsHW8wuPPrFxZToyLaYq6froT   0 Tgas |3: 5ub8CZMQmzmZYQcJU76hDC3BsajJfryjyShxGF9rzpck   1 Tgas
 </code></pre>
 <p>I know that the receipt should belong to Shard 3 <!-- TODO: how? :) --> so let’s fetch
 the chunk header:</p>
-<pre><code class="language-console">$ uncd view-state chunks --chunk-hash 5ub8CZMQmzmZYQcJU76hDC3BsajJfryjyShxGF9rzpck
+<pre><code class="language-console">$ unc-node view-state chunks --chunk-hash 5ub8CZMQmzmZYQcJU76hDC3BsajJfryjyShxGF9rzpck
 </code></pre>
 <pre><code>ShardChunkHeaderV3 {
   inner: V2(

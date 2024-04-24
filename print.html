@@ -176,7 +176,7 @@ For reference documentation of the protocol, please refer to
 <p>Don't worry if this doesn't yet make a lot of sense: hopefully, by the end of
 this document the above picture would become much clearer!</p>
 <h2 id="overall-operation"><a class="header" href="#overall-operation">Overall Operation</a></h2>
-<p><code>framework</code> is a blockchain node -- it's a single binary (<code>uncd</code>) which runs on
+<p><code>framework</code> is a blockchain node -- it's a single binary (<code>unc-node</code>) which runs on
 some machine and talks to other similar binaries running elsewhere. Together,
 the nodes agree (using a distributed consensus algorithm) on a particular
 sequence of transactions. Once transaction sequence is established, each node
@@ -184,7 +184,7 @@ applies transactions to the current state. Because transactions are fully
 deterministic, each node in the network ends up with identical state. To allow
 greater scalability, UNC protocol uses sharding, which allows a node to hold
 only a small subset (shard) of the whole state.</p>
-<p><code>uncd</code> is a stateful, restartable process. When <code>uncd</code> starts, the node
+<p><code>unc-node</code> is a stateful, restartable process. When <code>unc-node</code> starts, the node
 connects to the network and starts processing blocks (block is a batch of
 transactions, processed together; transactions are batched into blocks for
 greater efficiency). The results of processing are persisted in the database.
@@ -196,7 +196,7 @@ missing bits of history from more up-to-date peer nodes.</p>
 <p>Major components of framework:</p>
 <ul>
 <li>
-<p><strong>JSON RPC</strong>. This HTTP RPC interface is how <code>uncd</code> communicates with
+<p><strong>JSON RPC</strong>. This HTTP RPC interface is how <code>unc-node</code> communicates with
 non-blockchain outside world. For example, to submit a transaction, some
 client sends an RPC request with it to some node in the network. From that
 node, the transaction propagates through the network, until it is included in
@@ -206,7 +206,7 @@ about current state of the blockchain. The <strong>JSON RPC</strong> interface i
 </li>
 <li>
 <p><strong>Network</strong>. If RPC is aimed &quot;outside&quot; the blockchain, &quot;network&quot; is how peer
-<code>uncd</code> nodes communicate with each other within the blockchain. RPC carries
+<code>unc-node</code> nodes communicate with each other within the blockchain. RPC carries
 requests from users of the blockchain, while network carries various messages
 needed to implement consensus. Two directly connected nodes communicate by
 sending protobuf-encoded messages over TCP. A node also includes logic to
@@ -262,7 +262,7 @@ various operations.</p>
 </li>
 </ul>
 <h2 id="entry-points"><a class="header" href="#entry-points">Entry Points</a></h2>
-<p><code>uncd/src/main.rs</code> contains the main function that starts a blockchain node.
+<p><code>unc-node/src/main.rs</code> contains the main function that starts a blockchain node.
 However, this file mostly only contains the logic to parse arguments and
 dispatch different commands. <code>start_with_config</code> in <code>framework/src/lib.rs</code> is the
 actual entry point and it starts all the actors.</p>
@@ -369,8 +369,8 @@ through compile-time feature flags. Currently we use wasmer0 and wasmer2 in
 production. The <code>imports</code> module exposes host functions defined in
 <code>unc-vm-logic</code> to WASM code. In other words, it defines the ABI of the
 contracts on UNC.</p>
-<h3 id="uncd"><a class="header" href="#uncd"><code>uncd</code></a></h3>
-<p>As mentioned before, <code>uncd</code> is the crate that contains that main entry points.
+<h3 id="unc-node"><a class="header" href="#unc-node"><code>unc-node</code></a></h3>
+<p>As mentioned before, <code>unc-node</code> is the crate that contains that main entry points.
 All the actors are spawned in <code>start_with_config</code>. It is also worth noting that
 <code>NightshadeRuntime</code> is the struct that implements <code>RuntimeAdapter</code>.</p>
 <!-- TODO: Maybe add RuntimeAdapter mention or explanation in runtime/runtime chapter? -->
@@ -417,13 +417,13 @@ If it takes just a couple seconds then it’s probably fine.  Anything
 slower should probably be classified as an expensive test.  In
 particular, if libtest complains the test takes more than 60 seconds
 then it definitely is and expensive test.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="how-uncd-works"><a class="header" href="#how-uncd-works">How uncd works</a></h1>
-<p>This chapter describes how uncd works with a focus on implementation details
+<div style="break-before: page; page-break-before: always;"></div><h1 id="how-unc-node-works"><a class="header" href="#how-unc-node-works">How unc-node works</a></h1>
+<p>This chapter describes how unc-node works with a focus on implementation details
 and practical scenarios. To get a better understanding of how the protocol
 works, please refer to <a href="https://nomicon.io">nomicon</a>. For a high-level code map
 of framework, please refer to this <a href="architecture/how/../">document</a>.</p>
 <h2 id="high-level-overview"><a class="header" href="#high-level-overview">High level overview</a></h2>
-<p>On the high level, uncd is a daemon that periodically receives messages from
+<p>On the high level, unc-node is a daemon that periodically receives messages from
 the network and sends messages to peers based on different triggers. Uncd is
 implemented using an <a href="https://en.wikipedia.org/wiki/Actor_model">actor
 framework</a> called
@@ -432,7 +432,7 @@ framework</a> called
 framework and by no means represents our confidence in actix. On the contrary, we
 have noticed a number of issues with actix and are considering implementing an
 actor framework in house.</p>
-<p>There are several important actors in uncd:</p>
+<p>There are several important actors in unc-node:</p>
 <ul>
 <li>
 <p><code>PeerActor</code> - Each peer is represented by one peer actor and runs in a separate
@@ -451,7 +451,7 @@ handles <code>RoutedMessage</code>s. Peer manager would decide whether the <code
 should be routed to <code>ClientActor</code> or <code>ViewClientActor</code>.</p>
 </li>
 <li>
-<p><code>ClientActor</code> - Client actor is the “core” of uncd. It contains all the main
+<p><code>ClientActor</code> - Client actor is the “core” of unc-node. It contains all the main
 logic including consensus, block and chunk processing, state transition, garbage
 collection, etc. Client actor is single threaded.</p>
 </li>
@@ -467,12 +467,12 @@ storage, such as header sync, state sync, and block sync requests.</li>
 <p><code>ViewClientActor</code> runs in four threads by default but this number is configurable.</p>
 </li>
 </ul>
-<h2 id="data-flow-within-uncd"><a class="header" href="#data-flow-within-uncd">Data flow within <code>uncd</code></a></h2>
+<h2 id="data-flow-within-unc-node"><a class="header" href="#data-flow-within-unc-node">Data flow within <code>unc-node</code></a></h2>
 <p>Flow for incoming messages:</p>
 <p><img src="https://user-images.githubusercontent.com/1711539/195619986-25798cde-8a91-4721-86bd-93fa924b483a.png" alt="" /></p>
 <p>Flow for outgoing messages:</p>
 <p><img src="https://user-images.githubusercontent.com/1711539/195626792-7697129b-7f9c-4953-b939-0b9bcacaf72c.png" alt="" /></p>
-<h2 id="how-uncd-operates-when-it-is-fully-synced"><a class="header" href="#how-uncd-operates-when-it-is-fully-synced">How uncd operates when it is fully synced</a></h2>
+<h2 id="how-unc-node-operates-when-it-is-fully-synced"><a class="header" href="#how-unc-node-operates-when-it-is-fully-synced">How unc-node operates when it is fully synced</a></h2>
 <p>When a node is fully synced, the main logic of the node operates in the
 following way (the node is assumed to track all shards, as most nodes on mainnet
 do today):</p>
@@ -514,7 +514,7 @@ producer of the next block (current block height + 1).</li>
 </ol>
 <p>The main logic is illustrated below:</p>
 <p><img src="https://user-images.githubusercontent.com/1711539/195635652-f0c7ebae-a2e5-423f-8e62-b853b815fcec.png" alt="" /></p>
-<h2 id="how-uncd-works-when-it-is-synchronizing"><a class="header" href="#how-uncd-works-when-it-is-synchronizing">How uncd works when it is synchronizing</a></h2>
+<h2 id="how-unc-node-works-when-it-is-synchronizing"><a class="header" href="#how-unc-node-works-when-it-is-synchronizing">How unc-node works when it is synchronizing</a></h2>
 <p><code>PeerManagerActor</code> periodically sends a <code>NetworkInfo</code> message to <code>ClientActor</code>
 to update it on the latest peer information, which includes the height of each
 peer. Once <code>ClientActor</code> realizes that it is more than <code>sync_height_threshold</code>
@@ -1829,13 +1829,13 @@ the hash of the receipt.</p>
 </code></pre>
 <p>Remember that the outcomes of the execution will be added to the NEXT block, so
 let’s find the next block hash, and the proper chunk.</p>
-<p>(in this example, I’ve used the <code>view-state chain</code> from uncd)</p>
+<p>(in this example, I’ve used the <code>view-state chain</code> from unc-node)</p>
 <pre><code>417 7FtuLHR3VSNhVTDJ8HmrzTffFWoWPAxBusipYa2UfrND |      node0 | parent: 416 C9WnNCbNvkQvnS7jdpaSGrqGvgM7Wwk5nQvkNC9aZFBH | .... 0: E6pfD84bvHmEWgEAaA8USCn2X3XUJAbFfKLmYez8TgZ8 107 Tgas |1: Ch1zr9TECSjDVaCjupNogLcNfnt6fidtevvKGCx8c9aC 104 Tgas |2: 87CmpU6y7soLJGTVHNo4XDHyUdy5aj9Qqy4V7muF5LyF   0 Tgas |3: CtaPWEvtbV4pWem9Kr7Ex3gFMtPcKL4sxDdXD4Pc7wah   0 Tgas
 418 J9WQV9iRJHG1shNwGaZYLEGwCEdTtCEEDUTHjboTLLmf |      node0 | parent: 417 7FtuLHR3VSNhVTDJ8HmrzTffFWoWPAxBusipYa2UfrND | .... 0: 7APjALaoxc8ymqwHiozB5BS6mb3LjTgv4ofRkKx2hMZZ   0 Tgas |1: BoVf3mzDLLSvfvsZ2apPSAKjmqNEHz4MtPkmz9ajSUT6   0 Tgas |2: Auz4FzUCVgnM7RsQ2noXsHW8wuPPrFxZToyLaYq6froT   0 Tgas |3: 5ub8CZMQmzmZYQcJU76hDC3BsajJfryjyShxGF9rzpck   1 Tgas
 </code></pre>
 <p>I know that the receipt should belong to Shard 3 <!-- TODO: how? :) --> so let’s fetch
 the chunk header:</p>
-<pre><code class="language-console">$ uncd view-state chunks --chunk-hash 5ub8CZMQmzmZYQcJU76hDC3BsajJfryjyShxGF9rzpck
+<pre><code class="language-console">$ unc-node view-state chunks --chunk-hash 5ub8CZMQmzmZYQcJU76hDC3BsajJfryjyShxGF9rzpck
 </code></pre>
 <pre><code>ShardChunkHeaderV3 {
   inner: V2(
@@ -1884,7 +1884,7 @@ combine(combine(&quot;Dpg4nQQwbkBZMmdNYcZiDPiihZPpsyviSTdDZgBRAn2z&quot;, combin
 </code></pre>
 <p>And success - our result is matching the outcome root, so it means that our
 receipt was indeed processed by the blockchain.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="how-uncd-will-work"><a class="header" href="#how-uncd-will-work">How uncd will work</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="how-unc-node-will-work"><a class="header" href="#how-unc-node-will-work">How unc-node will work</a></h1>
 <p>The documents under this chapter are talking about the future of UNC - what we're planning on improving and how.</p>
 <p>(This also means that they can get out of date quickly :-).</p>
 <p>If you have comments, suggestions or want to help us designing and implementing some of these things here - please reach out on Zulip or github.</p>
@@ -2154,7 +2154,7 @@ updated using a custom merge operation <code>merge_refcounted_records</code>.</p
 We should implement a feature to state-viewer that’d allow better visualization of this data, but in the meantime this seems to work.</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="high-level-overview-1"><a class="header" href="#high-level-overview-1">High level overview</a></h1>
-<p>When mainnet launched, the uncd client stored all the chain's state in a single
+<p>When mainnet launched, the unc-node client stored all the chain's state in a single
 RocksDB column <code>DBCol::State</code>. This column embeds the entire <a href="architecture/storage/./trie.html">UNC state
 trie</a> directly in the key-value database, using roughly
 <code>hash(borsh_encode(trie_node))</code> as the key to store a <code>trie_node</code>. This gives a
@@ -3344,7 +3344,7 @@ Here are some favorites:</p>
 <p>Finally, as a dessert, the first rust slide deck:
 <a href="http://venge.net/graydon/talks/rust-2012.pdf">http://venge.net/graydon/talks/rust-2012.pdf</a>.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="workflows"><a class="header" href="#workflows">Workflows</a></h1>
-<p>This chapter documents various ways you can run <code>uncd</code> during development:
+<p>This chapter documents various ways you can run <code>unc-node</code> during development:
 running a local net, joining a test net, doing benchmarking and load testing. </p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="run-a-node"><a class="header" href="#run-a-node">Run a Node</a></h1>
 <p>This chapter focuses on the basics of running a node you've just built from
@@ -3352,9 +3352,9 @@ source. It tries to explain how the thing works under the hood and pays
 relatively little attention to the various shortcuts we have.</p>
 <h2 id="building-the-node"><a class="header" href="#building-the-node">Building the Node</a></h2>
 <p>Start with the following command:</p>
-<pre><code class="language-console">$ cargo run --profile dev-release -p uncd -- --help
+<pre><code class="language-console">$ cargo run --profile dev-release -p unc-node -- --help
 </code></pre>
-<p>This command builds <code>uncd</code> and asks it to show <code>--help</code>. Building <code>uncd</code> takes
+<p>This command builds <code>unc-node</code> and asks it to show <code>--help</code>. Building <code>unc-node</code> takes
 a while, take a look at <a href="practices/workflows/../fast_builds.html">Fast Builds</a> chapter to learn how to
 speed it up.</p>
 <p>Let's dissect the command:</p>
@@ -3368,25 +3368,25 @@ profile is faster to compile, but produces a node that is too slow to
 participate in a real network. The <code>--release</code> profile produces a fully
 optimized node, but that's very slow to compile. So <code>--dev-release</code>
 is a sweet spot for us! However, never use it for actual production nodes.</li>
-<li><code>-p uncd</code> asks to build the <code>uncd</code> package. We use
+<li><code>-p unc-node</code> asks to build the <code>unc-node</code> package. We use
 <a href="https://doc.rust-lang.org/cargo/reference/workspaces.html">cargo workspaces</a>
-to organize our code. The <code>uncd</code> package in the top-level <code>/uncd</code> directory
+to organize our code. The <code>unc-node</code> package in the top-level <code>/unc-node</code> directory
 is the final binary that ties everything together.</li>
-<li><code>--</code> tells cargo to pass the rest of the arguments through to <code>uncd</code>.</li>
-<li><code>--help</code> instructs <code>uncd</code> to list available CLI arguments and subcommands.</li>
+<li><code>--</code> tells cargo to pass the rest of the arguments through to <code>unc-node</code>.</li>
+<li><code>--help</code> instructs <code>unc-node</code> to list available CLI arguments and subcommands.</li>
 </ul>
-<p><strong>Note:</strong> Building <code>uncd</code> might fail with an openssl or CC error. This means
+<p><strong>Note:</strong> Building <code>unc-node</code> might fail with an openssl or CC error. This means
 that you lack some non-rust dependencies we use (openssl and rocksdb mainly). We
 currently don't have docs on how to install those, but (basically) you want to
 <code>sudo apt install</code> (or whichever distro/package manager you use) missing bits.</p>
 <h2 id="preparing-tiny-network"><a class="header" href="#preparing-tiny-network">Preparing Tiny Network</a></h2>
-<p>Typically, you want <code>uncd</code> to connect to some network, like <code>mainnet</code> or
+<p>Typically, you want <code>unc-node</code> to connect to some network, like <code>mainnet</code> or
 <code>testnet</code>. We'll get there in time, but we'll start small. For the current
 chapter, we will run a network consisting of just a single node -- our own.</p>
 <p>The first step there is creating the required configuration. Run the <code>init</code>
 command to create config files:</p>
-<pre><code class="language-console">$ cargo run --profile dev-release -p uncd -- init
-INFO uncd: version=&quot;trunk&quot; build=&quot;1.1.0-3091-ga8964d200-modified&quot; latest_protocol=57
+<pre><code class="language-console">$ cargo run --profile dev-release -p unc-node -- init
+INFO unc-node: version=&quot;trunk&quot; build=&quot;1.1.0-3091-ga8964d200-modified&quot; latest_protocol=57
 INFO unc: Using key ed25519:B41GMfqE2jWHVwrPLbD7YmjZxxeQE9WA9Ua2jffP5dVQ for test.unc
 INFO unc: Using key ed25519:34d4aFJEmc2A96UXMa9kQCF8g2EfzZG9gCkBAPcsVZaz for node
 INFO unc: Generated node key, validator key, genesis file in ~/.unc
@@ -3475,7 +3475,7 @@ not the private ones).</p>
 </code></pre>
 <p>That is, we have a secret key for the sole validator in our network, how
 convenient.</p>
-<p>To recap, <code>uncd init</code> without arguments creates a config for a new network
+<p>To recap, <code>unc-node init</code> without arguments creates a config for a new network
 that starts with a single validator, for which we have the keys.</p>
 <p>You might be wondering what <code>~/.unc/node_key.json</code> is. That's not too
 important, but, in our network, there's no 1-1 correspondence between machines
@@ -3500,8 +3500,8 @@ You'd also have to ensure that you use the same genesis as the mainnet though
 is rejected.</p>
 <h2 id="running-the-network"><a class="header" href="#running-the-network">Running the Network</a></h2>
 <p>Finally,</p>
-<pre><code class="language-console">$ cargo run --profile dev-release -p uncd -- run
-INFO uncd: version=&quot;trunk&quot; build=&quot;1.1.0-3091-ga8964d200-modified&quot; latest_protocol=57
+<pre><code class="language-console">$ cargo run --profile dev-release -p unc-node -- run
+INFO unc-node: version=&quot;trunk&quot; build=&quot;1.1.0-3091-ga8964d200-modified&quot; latest_protocol=57
 INFO unc: Creating a new RocksDB database path=/home/matklad/.unc/data
 INFO db: Created a new RocksDB instance. num_instances=1
 INFO stats: #       0 4xecSHqTKx2q8JNQNapVEi5jxzewjxAnVFhMd4v5LqNh Validator | 1 validator 0 peers ⬇ 0 B/s ⬆ 0 B/s NaN bps 0 gas/s CPU: 0%, Mem: 50.8 MB
@@ -3520,8 +3520,8 @@ blocks by itself. Note the increasing <code>@ 1</code>, <code>@ 2</code>, ... nu
 means that our network grows.</p>
 <p>Let's stop the node with <code>^C</code> and look around</p>
 <pre><code class="language-console">INFO unc_chain::doomslug: ready to produce block @ 42, has enough approvals for 56.759µs, has enough chunks
-^C WARN uncd: SIGINT, stopping... this may take a few minutes.
-INFO uncd: Waiting for RocksDB to gracefully shutdown
+^C WARN unc-node: SIGINT, stopping... this may take a few minutes.
+INFO unc-node: Waiting for RocksDB to gracefully shutdown
 INFO db: Waiting for remaining RocksDB instances to shut down num_instances=1
 INFO db: All RocksDB instances shut down
 $
@@ -3541,8 +3541,8 @@ state of the network in various rocksdb tables:</p>
 <p>It doesn't matter what those are, &quot;rocksdb stuff&quot; is a fine level of understanding
 here. The important bit here is that the node remembers the state of the network,
 so, when we restart it, it continues from around the last block:</p>
-<pre><code class="language-console">$ cargo run --profile dev-release -p uncd -- run
-INFO uncd: version=&quot;trunk&quot; build=&quot;1.1.0-3091-ga8964d200-modified&quot; latest_protocol=57
+<pre><code class="language-console">$ cargo run --profile dev-release -p unc-node -- run
+INFO unc-node: version=&quot;trunk&quot; build=&quot;1.1.0-3091-ga8964d200-modified&quot; latest_protocol=57
 INFO db: Created a new RocksDB instance. num_instances=1
 INFO db: Dropped a RocksDB instance. num_instances=0
 INFO unc: Opening an existing RocksDB database path=/home/matklad/.unc/data
@@ -3722,8 +3722,8 @@ some amount of tokens was deducted to account for transaction fees.</p>
 <p>Great! So we've learned how to run our very own single-node UNC network using a
 binary we've built from source. The steps are:</p>
 <ul>
-<li>Create configs with <code>cargo run --profile dev-release -p uncd -- init</code></li>
-<li>Run the node with <code>cargo run --profile dev-release -p uncd -- run</code></li>
+<li>Create configs with <code>cargo run --profile dev-release -p unc-node -- init</code></li>
+<li>Run the node with <code>cargo run --profile dev-release -p unc-node -- run</code></li>
 <li>Poke the node with <code>httpie</code> or</li>
 <li>Install <code>unc-cli</code> via <code>npm install -g unc-cli</code></li>
 <li>Submit transactions via <code>unc_ENV=local unc create-account ...</code></li>
@@ -3737,8 +3737,8 @@ contract on our local node.</p>
 <p>Let's start with creating a fresh local network with an account to which we'll
 deploy a contract. You might want to re-read <a href="practices/workflows/./run_a_node.html">how to run a node</a>
 to understand what's going one here:</p>
-<pre><code class="language-console">$ cargo run --profile dev-release -p uncd -- init
-$ cargo run --profile dev-release -p uncd -- run
+<pre><code class="language-console">$ cargo run --profile dev-release -p unc-node -- init
+$ cargo run --profile dev-release -p unc-node -- run
 $ UNC_ENV=local unc create-account alice.test.unc --masterAccount test.unc
 </code></pre>
 <p>As a sanity check, querying the state of <code>alice.test.unc</code> account should work:</p>
@@ -4013,10 +4013,10 @@ the list of available options.</p>
 <li>Machine2: &quot;laptop&quot; - 192.168.0.2</li>
 </ul>
 <p>Run on both machines (make sure that they are using the same version of the code):</p>
-<pre><code>cargo build -p uncd
+<pre><code>cargo build -p unc-node
 </code></pre>
 <p>Then on machine1 run the command below, which will generate the configurations:</p>
-<pre><code>./target/debug/uncd --home ~/.unc/localnet_multi localnet --shards 3 --v 2
+<pre><code>./target/debug/unc-node --home ~/.unc/localnet_multi localnet --shards 3 --v 2
 </code></pre>
 <p>This command has generated configuration for 3 shards and 2 validators (in directories ~/.unc/localnet_multi/node0 and ~/.unc/localnet_multi/node1).</p>
 <p>Now - copy the contents of node1 directory to the machine2</p>
@@ -4034,10 +4034,10 @@ the list of available options.</p>
 </ul>
 <h2 id="running"><a class="header" href="#running">Running</a></h2>
 <p>On machine1:</p>
-<pre><code>./target/debug/uncd --home ~/.unc/localnet_multi/node0 run
+<pre><code>./target/debug/unc-node --home ~/.unc/localnet_multi/node0 run
 </code></pre>
 <p>On machine2:</p>
-<pre><code>./target/debug/uncd --home ~/.unc/localnet_multi/node1 run --boot-nodes ed25519:7PGseFbWxvYVgZ89K1uTJKYoKetWs7BJtbyXDzfbAcqX@192.168.0.1:37665
+<pre><code>./target/debug/unc-node --home ~/.unc/localnet_multi/node1 run --boot-nodes ed25519:7PGseFbWxvYVgZ89K1uTJKYoKetWs7BJtbyXDzfbAcqX@192.168.0.1:37665
 </code></pre>
 <p>The boot node address should be the IP of the machine1 + the network addr port <strong>from the node0/config.json</strong></p>
 <p>And if everything goes well, the nodes should communicate and start producing blocks.</p>
@@ -4060,26 +4060,26 @@ observe those.</p>
 features (prefetcher, flat state) and to find out why specific contracts produce
 slow receipts.</p>
 <h2 id="setup-1"><a class="header" href="#setup-1">Setup</a></h2>
-<p>When compiling uncd (or the paramater estimator) with <code>feature=io_trace</code> it
+<p>When compiling unc-node (or the paramater estimator) with <code>feature=io_trace</code> it
 instruments the binary code with fine-grained database operations tracking.</p>
 <p><em>Aside: We don't enable it by default because we are afraid the overhead could be
 too much, since we store some information for very hot paths such as trie node
 cache hits. Although we haven't properly evaluated if it really is a performance
 problem.</em></p>
 <p>This allows using the <code>--record-io-trace=/path/to/output.io_trace</code> CLI flag on
-uncd. Run it in combination with the subcommands <code>uncd run</code>, <code>uncd view-state</code>, or <code>runtime-params-estimator</code> and it will record an IO trace. Make
-sure to provide the flag to <code>uncd</code> itself, however, not to the subcommands.
+unc-node. Run it in combination with the subcommands <code>unc-node run</code>, <code>unc-node view-state</code>, or <code>runtime-params-estimator</code> and it will record an IO trace. Make
+sure to provide the flag to <code>unc-node</code> itself, however, not to the subcommands.
 (See examples below)</p>
 <pre><code class="language-bash"># Example command for normal node
 # (Careful! This will quickly fill your disk if you let it run.)
-cargo build --release -p uncd --features=io_trace
-target/release/uncd \
+cargo build --release -p unc-node --features=io_trace
+target/release/unc-node \
     --record-io-trace=/mnt/disks/some_disk_with_enough_space/my.io_trace \
     run
 </code></pre>
 <pre><code class="language-bash"># Example command for state viewer, applying a range of chunks in shard 0
-cargo build --release -p uncd --features=io_trace
-target/release/uncd \
+cargo build --release -p unc-node --features=io_trace
+target/release/unc-node \
     --record-io-trace=75220100-75220101.s0.io_trace \
     view-state apply-range --start-index 75220100 --end-index 75220101 \
     --sequential --shard-id 0
@@ -4557,7 +4557,7 @@ alternative, as it neatly documents not just the infallibility, but also <em>why
 factors, most notably the compilation flags used. The quick explanation is that in debug mode the
 computations may panic (cause side effects) if the result has overflowed, and when built with
 optimizations enabled, these computations will wrap-around instead.</p>
-<p>For framework and uncd we have opted to enable the panicking behaviour regardless of the
+<p>For framework and unc-node we have opted to enable the panicking behaviour regardless of the
 optimization level. By doing it this we hope to prevent accidental stabilization of protocol
 mis-features that depend on incorrect handling of these overflows or similarly scary silent bugs.
 The downside to this approach is that any such arithmetic operation now may cause a node to crash,
@@ -4700,7 +4700,7 @@ metrics don't incur a significant runtime cost.</p>
 for new metrics.</p>
 <p><strong>Rationale:</strong> The <code>unc_</code> prefix makes it trivial to separate metrics exported
 by <code>framework</code> from other metrics, such as metrics about the state of the machine
-that runs <code>uncd</code>.</p>
+that runs <code>unc-node</code>.</p>
 <h3 id="performance"><a class="header" href="#performance">Performance</a></h3>
 <p>In most cases incrementing a metric is cheap enough never to give it a second
 thought. However accessing a metric with labels on a hot path needs to be done
@@ -4928,14 +4928,14 @@ rustflags = [&quot;-C&quot;, &quot;link-arg=-fuse-ld=lld&quot;]
 <p><code>lld</code> itself can be installed with <code>sudo apt install lld</code> (or the equivalent in 
 the distro/package manager of your choice).</p>
 <h2 id="prebuilt-rocksdb"><a class="header" href="#prebuilt-rocksdb">Prebuilt RocksDB</a></h2>
-<p>By default, we compile RocksDB (a C++ project) from source during the uncd
+<p>By default, we compile RocksDB (a C++ project) from source during the unc-node
 build. By linking to a prebuilt copy of RocksDB this work can be avoided
 entirely. This is a huge win, especially if you clean the <code>./target</code> directory
 frequently.</p>
 <p>To use a prebuilt RocksDB, set the <code>ROCKSDB_LIB_DIR</code> environment variable to
 a location containing <code>librocksdb.a</code>:</p>
 <pre><code class="language-console">$ export ROCKSDB_LIB_DIR=/usr/lib/x86_64-linux-gnu
-$ cargo build -p uncd
+$ cargo build -p unc-node
 </code></pre>
 <p>Note, that the system must provide a recent version of the library which,
 depending on which operating system you’re using, may require installing packages
@@ -4961,7 +4961,7 @@ the global cache whenever possible. This tool can be set up as such:</p>
 <pre><code class="language-console">$ cargo install sccache
 $ export RUSTC_WRAPPER=&quot;sccache&quot;
 $ export SCCACHE_CACHE_SIZE=&quot;30G&quot;
-$ cargo build -p uncd
+$ cargo build -p unc-node
 </code></pre>
 <p>Refer to the <a href="https://github.com/mozilla/sccache">project’s README</a> for further
 configuration options.</p>
@@ -5153,7 +5153,7 @@ until it produces several blocks.</p>
 debug build (<code>{framework}/target/debug</code>). Some tests might also expect
 test-specific features guarded by a feature flag to be available. To compile the
 binary with such features run:</p>
-<pre><code>cargo build -p uncd --features=adversarial
+<pre><code>cargo build -p unc-node --features=adversarial
 </code></pre>
 <p>The feature is called <code>adversarial</code> to highlight that the many functions it enables,
 outside of tests, would constitute malicious behavior. The node compiled with
@@ -5449,9 +5449,9 @@ especially if the change is invasive. For those changes, we may want to have
 several months of testing before we are confident that the change itself works
 and that it doesn't break other parts of the system.</p>
 <h3 id="protocol-version-voting-and-upgrade"><a class="header" href="#protocol-version-voting-and-upgrade">Protocol version voting and upgrade</a></h3>
-<p>When a new uncd version, containing a new protocol version, is released, all node maintainers need 
-to upgrade their binary. That typically means stopping uncd, downloading or compiling the new uncd
-binary and restarting uncd. However the protocol version of the whole network is not immediately 
+<p>When a new unc-node version, containing a new protocol version, is released, all node maintainers need 
+to upgrade their binary. That typically means stopping unc-node, downloading or compiling the new unc-node
+binary and restarting unc-node. However the protocol version of the whole network is not immediately 
 bumped to the new protocol version. Instead a process called voting takes place and determines if and 
 when the protocol version upgrade will take place. </p>
 <p>Voting is a fully automated process in which all block producers across the network vote in support 
@@ -5462,10 +5462,10 @@ Once at least 80% of the pledge votes in favour of the protocol change in the la
 protocol version will be upgraded in the first block of epoch X+2. </p>
 <p>For mainnet releases, the release on github typically happens on a Monday or Tuesday, the voting 
 typically happens a week later and the protocol version upgrade happens 1-2 epochs after the voting. This 
-gives the node maintainers enough time to upgrade their uncd nodes. The node maintainers can upgrade
+gives the node maintainers enough time to upgrade their unc-node nodes. The node maintainers can upgrade
 their nodes at any time between the release and the voting but it is recommended to upgrade soon after the
 release. This is to accommodate for any database migrations or miscellaneous delays. </p>
-<p>Starting a uncd node with protocol version voting in the future in a network that is already operating 
+<p>Starting a unc-node node with protocol version voting in the future in a network that is already operating 
 at that protocol version is supported as well. This is useful in the scenario where there is a mainnet 
 security release where mainnet has not yet voted or upgraded to the new version. That same binary with
 protocol voting date in the future can be released in testnet even though it has already upgraded to 
@@ -5544,13 +5544,13 @@ nightly features.</li>
 testing environments. We can choose to enable all nightly protocol features by</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>cargo build -p uncd --release --features nightly
+</span>cargo build -p unc-node --release --features nightly
 <span class="boring">}
 </span></code></pre></pre>
 <p>or enable some specific protocol feature by</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>cargo build -p uncd --release --features nightly_protocol,&lt;protocol_feature&gt;
+</span>cargo build -p unc-node --release --features nightly_protocol,&lt;protocol_feature&gt;
 <span class="boring">}
 </span></code></pre></pre>
 <p>In practice, we have all nightly protocol features enabled for Canary tests and
@@ -5638,13 +5638,13 @@ node to act as a proxy for validators.</li>
 <h2 id="purpose"><a class="header" href="#purpose">Purpose</a></h2>
 <p>For testing purposes, it is often desirable to start a test chain with
 a starting state that looks like mainnet or testnet. This is usually
-done for the purpose of testing changes to uncd itself, but it's also
+done for the purpose of testing changes to unc-node itself, but it's also
 possible to do this if you're a contract developer and want to see
 what a change to your contract would look like on top of the current
 mainnet state. At the end of the process described here, you'll have
 a set of genesis records that can be used to start your own test chain,
 that'll be like any other test chain like the ones generated by the
-<code>uncd localnet</code> command, except with account balances and data taken
+<code>unc-node localnet</code> command, except with account balances and data taken
 from mainnet</p>
 <h2 id="how-to"><a class="header" href="#how-to">How-to</a></h2>
 <p>The first step is to obtain an RPC node home directory for the chain
@@ -5654,7 +5654,7 @@ follow the instructions
 to obtain a recent snapshot of a mainnet node's home directory. Once
 you have your node's home directory set up, run the following
 <code>state-viewer</code> command to generate a dump of the chain's state:</p>
-<pre><code class="language-shell">$ uncd --home $UNC_HOME_DIRECTORY view-state dump-state --stream
+<pre><code class="language-shell">$ unc-node --home $UNC_HOME_DIRECTORY view-state dump-state --stream
 </code></pre>
 <p>This command will take a while (possibly many hours) to run. But at the
 end you should have <code>genesis.json</code> and <code>records.json</code> files in
@@ -5694,8 +5694,8 @@ field in <code>genesis.json</code>, maybe in the file
 </code></pre>
 <p>These validator keys should be keys you've already generated. So for
 the rest of this document, we'll assume you've run:</p>
-<pre><code class="language-shell">$ uncd --home ~/unc-test-chain/validator0 init --account-id validator0.unc
-$ uncd --home ~/unc-test-chain/validator1 init --account-id validator1.unc
+<pre><code class="language-shell">$ unc-node --home ~/unc-test-chain/validator0 init --account-id validator0.unc
+$ unc-node --home ~/unc-test-chain/validator1 init --account-id validator1.unc
 </code></pre>
 <p>This is also a good time to think about what extra accounts you might
 want in your test chain. Since all accounts in the test chain will
@@ -5735,9 +5735,9 @@ to do anything with the account. Note that here you can also add
 access keys for any mainnet account you want, so you'll be able to
 control it in the test chain.</p>
 <p>Now to make these changes to the genesis and records files, you can
-use the <code>uncd amend-genesis</code> command like so:</p>
+use the <code>unc-node amend-genesis</code> command like so:</p>
 <pre><code class="language-shell"># mkdir ~/unc-test-chain/
-$ uncd amend-genesis --genesis-file-in $UNC_HOME_DIRECTORY/output/genesis.json --records-file-in $UNC_HOME_DIRECTORY/output/records.json --validators ~/test-chain-scratch/validators.json --extra-records ~/test-chain-scratch/extra-records.json --chain-id $TEST_CHAIN_ID --records-file-out ~/unc-test-chain/records.json --genesis-file-out ~/unc-test-chain/genesis.json
+$ unc-node amend-genesis --genesis-file-in $UNC_HOME_DIRECTORY/output/genesis.json --records-file-in $UNC_HOME_DIRECTORY/output/records.json --validators ~/test-chain-scratch/validators.json --extra-records ~/test-chain-scratch/extra-records.json --chain-id $TEST_CHAIN_ID --records-file-out ~/unc-test-chain/records.json --genesis-file-out ~/unc-test-chain/genesis.json
 </code></pre>
 <h2 id="starting-the-network"><a class="header" href="#starting-the-network">Starting the network</a></h2>
 <p>After running the previous steps you should have the files
@@ -5806,10 +5806,10 @@ the minimum required number of peers, since we're just running a small
 test network locally. We set <code>skip_sync_wait</code> to <code>false</code>, because
 otherwise we get strange behavior that will often make your network
 stall.</p>
-<p>After making these changes, you can try running one uncd process for
+<p>After making these changes, you can try running one unc-node process for
 each of your validators:</p>
-<pre><code class="language-shell">$ uncd --home ~/unc-test-chain/validator0 run
-$ uncd --home ~/unc-test-chain/validator1 run
+<pre><code class="language-shell">$ unc-node --home ~/unc-test-chain/validator0 run
+$ unc-node --home ~/unc-test-chain/validator1 run
 </code></pre>
 <p>Now these nodes will begin by taking the records laid out in
 <code>records.json</code> and turning them into a genesis state. At the time of
@@ -5857,7 +5857,7 @@ from external storage. The following kinds of external storage are supported:</p
 </ul>
 <p>A new version of decentralized state sync is work in progress.</p>
 <h2 id="how-to-1"><a class="header" href="#how-to-1">How-to</a></h2>
-<p>uncd release <code>1.36.0-rc.1</code> adds an experimental option to sync state from
+<p>unc-node release <code>0.7.3</code> adds an experimental option to sync state from
 external storage.</p>
 <p>See <a href="misc/state_sync_from_external_storage.html">how-to</a> how to configure your node to
 State Sync from External Storage.</p>
@@ -5877,7 +5877,7 @@ State Sync from External Storage.</p>
 </code></pre>
 <p>And run your node with an environment variable <code>SERVICE_ACCOUNT</code> or
 <code>GOOGLE_APPLICATION_CREDENTIALS</code> pointing to the credentials json file</p>
-<pre><code class="language-shell">SERVICE_ACCOUNT=/path/to/file ./uncd run
+<pre><code class="language-shell">SERVICE_ACCOUNT=/path/to/file ./unc-node run
 </code></pre>
 <h3 id="amazon-s3"><a class="header" href="#amazon-s3">Amazon S3</a></h3>
 <p>To enable Amazon S3 as your external storage, add this to your <code>config.json</code>
@@ -5895,7 +5895,7 @@ file:</p>
 </code></pre>
 <p>And run your node with environment variables <code>AWS_ACCESS_KEY_ID</code> and
 <code>AWS_SECRET_ACCESS_KEY</code>:</p>
-<pre><code class="language-shell">AWS_ACCESS_KEY_ID=&quot;MY_ACCESS_KEY&quot; AWS_SECRET_ACCESS_KEY=&quot;MY_AWS_SECRET_ACCESS_KEY&quot; ./uncd run
+<pre><code class="language-shell">AWS_ACCESS_KEY_ID=&quot;MY_ACCESS_KEY&quot; AWS_SECRET_ACCESS_KEY=&quot;MY_AWS_SECRET_ACCESS_KEY&quot; ./unc-node run
 </code></pre>
 <h2 id="dump-to-a-local-filesystem"><a class="header" href="#dump-to-a-local-filesystem">Dump to a local filesystem</a></h2>
 <p>Add this to your <code>config.json</code> file to dump state of every epoch to local
@@ -5912,7 +5912,7 @@ filesystem:</p>
 </code></pre>
 <p>In this case you don't need any extra environment variables. Simply run your
 node:</p>
-<pre><code class="language-shell">./uncd run
+<pre><code class="language-shell">./unc-node run
 </code></pre>
 
                     </main>

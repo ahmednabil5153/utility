@@ -174,7 +174,7 @@ until it produces several blocks.</p>
 debug build (<code>{framework}/target/debug</code>). Some tests might also expect
 test-specific features guarded by a feature flag to be available. To compile the
 binary with such features run:</p>
-<pre><code>cargo build -p uncd --features=adversarial
+<pre><code>cargo build -p unc-node --features=adversarial
 </code></pre>
 <p>The feature is called <code>adversarial</code> to highlight that the many functions it enables,
 outside of tests, would constitute malicious behavior. The node compiled with

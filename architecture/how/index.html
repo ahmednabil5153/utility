@@ -140,13 +140,13 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="how-uncd-works"><a class="header" href="#how-uncd-works">How uncd works</a></h1>
-<p>This chapter describes how uncd works with a focus on implementation details
+                        <h1 id="how-unc-node-works"><a class="header" href="#how-unc-node-works">How unc-node works</a></h1>
+<p>This chapter describes how unc-node works with a focus on implementation details
 and practical scenarios. To get a better understanding of how the protocol
 works, please refer to <a href="https://nomicon.io">nomicon</a>. For a high-level code map
 of framework, please refer to this <a href="../">document</a>.</p>
 <h2 id="high-level-overview"><a class="header" href="#high-level-overview">High level overview</a></h2>
-<p>On the high level, uncd is a daemon that periodically receives messages from
+<p>On the high level, unc-node is a daemon that periodically receives messages from
 the network and sends messages to peers based on different triggers. Uncd is
 implemented using an <a href="https://en.wikipedia.org/wiki/Actor_model">actor
 framework</a> called
@@ -155,7 +155,7 @@ framework</a> called
 framework and by no means represents our confidence in actix. On the contrary, we
 have noticed a number of issues with actix and are considering implementing an
 actor framework in house.</p>
-<p>There are several important actors in uncd:</p>
+<p>There are several important actors in unc-node:</p>
 <ul>
 <li>
 <p><code>PeerActor</code> - Each peer is represented by one peer actor and runs in a separate
@@ -174,7 +174,7 @@ handles <code>RoutedMessage</code>s. Peer manager would decide whether the <code
 should be routed to <code>ClientActor</code> or <code>ViewClientActor</code>.</p>
 </li>
 <li>
-<p><code>ClientActor</code> - Client actor is the “core” of uncd. It contains all the main
+<p><code>ClientActor</code> - Client actor is the “core” of unc-node. It contains all the main
 logic including consensus, block and chunk processing, state transition, garbage
 collection, etc. Client actor is single threaded.</p>
 </li>
@@ -190,12 +190,12 @@ storage, such as header sync, state sync, and block sync requests.</li>
 <p><code>ViewClientActor</code> runs in four threads by default but this number is configurable.</p>
 </li>
 </ul>
-<h2 id="data-flow-within-uncd"><a class="header" href="#data-flow-within-uncd">Data flow within <code>uncd</code></a></h2>
+<h2 id="data-flow-within-unc-node"><a class="header" href="#data-flow-within-unc-node">Data flow within <code>unc-node</code></a></h2>
 <p>Flow for incoming messages:</p>
 <p><img src="https://user-images.githubusercontent.com/1711539/195619986-25798cde-8a91-4721-86bd-93fa924b483a.png" alt="" /></p>
 <p>Flow for outgoing messages:</p>
 <p><img src="https://user-images.githubusercontent.com/1711539/195626792-7697129b-7f9c-4953-b939-0b9bcacaf72c.png" alt="" /></p>
-<h2 id="how-uncd-operates-when-it-is-fully-synced"><a class="header" href="#how-uncd-operates-when-it-is-fully-synced">How uncd operates when it is fully synced</a></h2>
+<h2 id="how-unc-node-operates-when-it-is-fully-synced"><a class="header" href="#how-unc-node-operates-when-it-is-fully-synced">How unc-node operates when it is fully synced</a></h2>
 <p>When a node is fully synced, the main logic of the node operates in the
 following way (the node is assumed to track all shards, as most nodes on mainnet
 do today):</p>
@@ -237,7 +237,7 @@ producer of the next block (current block height + 1).</li>
 </ol>
 <p>The main logic is illustrated below:</p>
 <p><img src="https://user-images.githubusercontent.com/1711539/195635652-f0c7ebae-a2e5-423f-8e62-b853b815fcec.png" alt="" /></p>
-<h2 id="how-uncd-works-when-it-is-synchronizing"><a class="header" href="#how-uncd-works-when-it-is-synchronizing">How uncd works when it is synchronizing</a></h2>
+<h2 id="how-unc-node-works-when-it-is-synchronizing"><a class="header" href="#how-unc-node-works-when-it-is-synchronizing">How unc-node works when it is synchronizing</a></h2>
 <p><code>PeerManagerActor</code> periodically sends a <code>NetworkInfo</code> message to <code>ClientActor</code>
 to update it on the latest peer information, which includes the height of each
 peer. Once <code>ClientActor</code> realizes that it is more than <code>sync_height_threshold</code>

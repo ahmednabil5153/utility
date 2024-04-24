@@ -393,7 +393,7 @@ alternative, as it neatly documents not just the infallibility, but also <em>why
 factors, most notably the compilation flags used. The quick explanation is that in debug mode the
 computations may panic (cause side effects) if the result has overflowed, and when built with
 optimizations enabled, these computations will wrap-around instead.</p>
-<p>For framework and uncd we have opted to enable the panicking behaviour regardless of the
+<p>For framework and unc-node we have opted to enable the panicking behaviour regardless of the
 optimization level. By doing it this we hope to prevent accidental stabilization of protocol
 mis-features that depend on incorrect handling of these overflows or similarly scary silent bugs.
 The downside to this approach is that any such arithmetic operation now may cause a node to crash,
@@ -536,7 +536,7 @@ metrics don't incur a significant runtime cost.</p>
 for new metrics.</p>
 <p><strong>Rationale:</strong> The <code>unc_</code> prefix makes it trivial to separate metrics exported
 by <code>framework</code> from other metrics, such as metrics about the state of the machine
-that runs <code>uncd</code>.</p>
+that runs <code>unc-node</code>.</p>
 <h3 id="performance"><a class="header" href="#performance">Performance</a></h3>
 <p>In most cases incrementing a metric is cheap enough never to give it a second
 thought. However accessing a metric with labels on a hot path needs to be done

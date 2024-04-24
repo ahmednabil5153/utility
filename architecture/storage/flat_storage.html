@@ -141,7 +141,7 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="high-level-overview"><a class="header" href="#high-level-overview">High level overview</a></h1>
-<p>When mainnet launched, the uncd client stored all the chain's state in a single
+<p>When mainnet launched, the unc-node client stored all the chain's state in a single
 RocksDB column <code>DBCol::State</code>. This column embeds the entire <a href="./trie.html">UNC state
 trie</a> directly in the key-value database, using roughly
 <code>hash(borsh_encode(trie_node))</code> as the key to store a <code>trie_node</code>. This gives a

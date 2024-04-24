@@ -148,10 +148,10 @@
 <li>Machine2: &quot;laptop&quot; - 192.168.0.2</li>
 </ul>
 <p>Run on both machines (make sure that they are using the same version of the code):</p>
-<pre><code>cargo build -p uncd
+<pre><code>cargo build -p unc-node
 </code></pre>
 <p>Then on machine1 run the command below, which will generate the configurations:</p>
-<pre><code>./target/debug/uncd --home ~/.unc/localnet_multi localnet --shards 3 --v 2
+<pre><code>./target/debug/unc-node --home ~/.unc/localnet_multi localnet --shards 3 --v 2
 </code></pre>
 <p>This command has generated configuration for 3 shards and 2 validators (in directories ~/.unc/localnet_multi/node0 and ~/.unc/localnet_multi/node1).</p>
 <p>Now - copy the contents of node1 directory to the machine2</p>
@@ -169,10 +169,10 @@
 </ul>
 <h2 id="running"><a class="header" href="#running">Running</a></h2>
 <p>On machine1:</p>
-<pre><code>./target/debug/uncd --home ~/.unc/localnet_multi/node0 run
+<pre><code>./target/debug/unc-node --home ~/.unc/localnet_multi/node0 run
 </code></pre>
 <p>On machine2:</p>
-<pre><code>./target/debug/uncd --home ~/.unc/localnet_multi/node1 run --boot-nodes ed25519:7PGseFbWxvYVgZ89K1uTJKYoKetWs7BJtbyXDzfbAcqX@192.168.0.1:37665
+<pre><code>./target/debug/unc-node --home ~/.unc/localnet_multi/node1 run --boot-nodes ed25519:7PGseFbWxvYVgZ89K1uTJKYoKetWs7BJtbyXDzfbAcqX@192.168.0.1:37665
 </code></pre>
 <p>The boot node address should be the IP of the machine1 + the network addr port <strong>from the node0/config.json</strong></p>
 <p>And if everything goes well, the nodes should communicate and start producing blocks.</p>
